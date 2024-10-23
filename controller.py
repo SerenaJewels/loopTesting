@@ -36,7 +36,7 @@ class PS4Controller(object):
 
     def listen(self):
         """Listen for events to happen"""
-        dirArr = ['n', 'n']
+        dirArr = ['n', 'n', False, False, False, False] # left joystick, right joystick, left bumper, right bumper, left trigger, right trigger
         
         if not self.axis_data:
             self.axis_data = {}
@@ -67,10 +67,16 @@ class PS4Controller(object):
                 
                 # os.system('clear')
                 # pprint.pprint(self.button_data)
+                dirArr[2] = self.button_data[4]
+                dirArr[3] = self.button_data[5]
+                dirArr[4] = self.button_data[6]
+                dirArr[5] = self.button_data[7]
+
                 # pprint.pprint(self.axis_data)
                 # pprint.pprint(self.hat_data)
 
-                if(len(self.axis_data) == 4):
+                if(len(self.axis_data) >= 4):
+                    # print(self.axis_data)
                     if(self.axis_data.get(0) < -0.85):
                         dirArr[0] = 'l'
                     elif(self.axis_data.get(0) > 0.85):
@@ -82,20 +88,20 @@ class PS4Controller(object):
                     else:
                         dirArr[0] = 'n'
 
-                    if(self.axis_data.get(2) < -0.85):
+                    if(self.axis_data.get(3) < -0.85):
                         dirArr[1] = 'l'
-                    elif(self.axis_data.get(2) > 0.85):
-                        dirArr[1] = 'r'
-                    elif(self.axis_data.get(3) < -0.85):
-                        dirArr[1] = 'u'
                     elif(self.axis_data.get(3) > 0.85):
+                        dirArr[1] = 'r'
+                    elif(self.axis_data.get(4) < -0.85):
+                        dirArr[1] = 'u'
+                    elif(self.axis_data.get(4) > 0.85):
                         dirArr[1] = 'd'
                     else:
                         dirArr[1] = 'n'
 
                     print(dirArr)
                 else:
-                    print('calibrate:', pprint.pprint(self.axis_data))
+                    print('calibrate:', self.axis_data)
 
 
 
