@@ -17,16 +17,18 @@
 import os
 import pprint
 import pygame
-import numpy as np
-from socketcan import CanRawSocket, CanFrame
+import socketcan
 
-class PS4Controller(object):
+class PS4ToBus(object):
     """Class representing the PS4 controller. Pretty straightforward functionality."""
 
     controller = None
     axis_data = None
     button_data = None
     hat_data = None
+    s = None
+    interface = "vcan0"
+    can_id = 0x141
 
     def init(self):
         """Initialize the joystick components"""
@@ -36,9 +38,10 @@ class PS4Controller(object):
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
 
+        # setting up can link
+        s = CanRawSocket(interface = interface)
+
     def listen(self):
-
-
         """Listen for events to happen"""
         dirArr = ['n', 'n', False, False, False, False] # left joystick, right joystick, left bumper, right bumper, left trigger, right trigger
         
@@ -104,24 +107,7 @@ class PS4Controller(object):
                         dirArr[1] = 'n'
 
                     # print(dirArr)
-
-                    activation = 0.25
-                    rounded = [0, 0, 0, 0]
-
-                    # print(self.axis_data)
-
-                    if np.abs(self.axis_data.get(0)) <= activation:
-                        self.axis_data[0] = 0
-                    if np.abs(self.axis_data.get(1)) <= activation:
-                        self.axis_data[1] = 0
-                    if np.abs(self.axis_data.get(3)) <= activation:
-                        self.axis_data[3] = 0
-                    if np.abs(self.axis_data.get(4)) <= activation:
-                        self.axis_data[4] = 0
-                    print(self.axis_data[0], self.axis_data[1], self.axis_data[3], self.axis_data[4])
-
-                    # IPLEMENT SIGMOID CURVE FOR ACTIVATOIN, .25 is fine for activation num
-
+                    print(self.axis_data)
                 else:
                     print('calibrate:', self.axis_data)
 
