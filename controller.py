@@ -25,6 +25,8 @@ class PS4Controller(object):
     axis_data = None
     button_data = None
     hat_data = None
+    activation = 0.25
+    maxVel = 100
 
     def init(self):
         """Initialize the joystick components"""
@@ -36,7 +38,6 @@ class PS4Controller(object):
 
     def listen(self):
         """Listen for events to happen"""
-        dirArr = ['n', 'n']
         
         if not self.axis_data:
             self.axis_data = {}
@@ -70,32 +71,37 @@ class PS4Controller(object):
                 # pprint.pprint(self.axis_data)
                 # pprint.pprint(self.hat_data)
 
-                if(len(self.axis_data) == 4):
-                    if(self.axis_data.get(0) < -0.85):
-                        dirArr[0] = 'l'
-                    elif(self.axis_data.get(0) > 0.85):
-                        dirArr[0] = 'r'
-                    elif(self.axis_data.get(1) < -0.85):
-                        dirArr[0] = 'u'
-                    elif(self.axis_data.get(1) > 0.85):
-                        dirArr[0] = 'd'
+                if(len(self.axis_data) >= 4):
+                    if(self.axis_data.get(0) < -activation):
+                        self.axis_data[0] = (self.axis_data[0] - activation) / (1 - activation) * maxVel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(0) > activation):
+                        self.axis_data[0] = (self.axis_data[0] + activation) / (1 - activation) * maxVel 
                     else:
-                        dirArr[0] = 'n'
+                        self.axis_data[0] = 0
 
-                    if(self.axis_data.get(2) < -0.85):
-                        dirArr[1] = 'l'
-                    elif(self.axis_data.get(2) > 0.85):
-                        dirArr[1] = 'r'
-                    elif(self.axis_data.get(3) < -0.85):
-                        dirArr[1] = 'u'
-                    elif(self.axis_data.get(3) > 0.85):
-                        dirArr[1] = 'd'
+                    if(self.axis_data.get(1) < -activation):
+                        self.axis_data[1] = (self.axis_data[1] - activation) / (1 - activation) * maxVel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(1) > activation):
+                        self.axis_data[1] = (self.axis_data[1] + activation) / (1 - activation) * maxVel 
                     else:
-                        dirArr[1] = 'n'
+                        self.axis_data[1] = 0
 
-                    print(dirArr)
+                    if(self.axis_data.get(3) < -activation):
+                        self.axis_data[3] = (self.axis_data[3] - activation) / (1 - activation) * maxVel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(3) > activation):
+                        self.axis_data[3] = (self.axis_data[3] + activation) / (1 - activation) * maxVel 
+                    else:
+                        self.axis_data[3] = 0
 
-                
+                    if(self.axis_data.get(4) < -activation):
+                        self.axis_data[4] = (self.axis_data[4] - activation) / (1 - activation) * maxVel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(4) > activation):
+                        self.axis_data[4] = (self.axis_data[4] + activation) / (1 - activation) * maxVel 
+                    else:
+                        self.axis_data[4] = 0
+
+                    print(self.axis_data)
+
                 else:
                     print('calibrate:', pprint.pprint(self.axis_data))
 
