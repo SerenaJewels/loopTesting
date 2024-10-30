@@ -13,6 +13,8 @@ class PS4ToBus(object):
     can_id = None
     s = None
     data = None
+    activation = 0.25
+    maxvel = 100 #16**8 - 1
 
     def init(self, bus):
         """Initialize the joystick components"""
@@ -23,13 +25,12 @@ class PS4ToBus(object):
 
         """Initialize socket"""
         interface = bus
-        can_id = 0x141
-        s = CanRawSocket(interface = interface)
+        self.can_id = 0x141
+        self.s = CanRawSocket(interface = interface)
 
     def listen(self):
-        """Listen for events to happen"""
-        dirArr = ['n', 'n']
-        
+        joystick_vels = [0, 0, 0, 0]
+
         if not self.axis_data:
             self.axis_data = {}
 
@@ -62,36 +63,42 @@ class PS4ToBus(object):
                 # pprint.pprint(self.axis_data)
                 # pprint.pprint(self.hat_data)
 
-                if(len(self.axis_data) == 4):
-                    if(self.axis_data.get(0) < -0.85):
-                        dirArr[0] = 'l'
-                    elif(self.axis_data.get(0) > 0.85):
-                        dirArr[0] = 'r'
-                    elif(self.axis_data.get(1) < -0.85):
-                        dirArr[0] = 'u'
-                    elif(self.axis_data.get(1) > 0.85):
-                        dirArr[0] = 'd'
+                if(len(self.axis_data) >= 4):
+                    if(self.axis_data.get(0) < -self.activation):
+                        joystick_vels[0] = ((self.axis_data[0] + self.activation) / (1 - self.activation)) * self.maxvel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(0) > self.activation):
+                        joystick_vels[0] = ((self.axis_data[0] - self.activation) / (1 - self.activation)) * self.maxvel 
                     else:
-                        dirArr[0] = 'n'
+                        joystick_vels[0] = 0
 
-                    if(self.axis_data.get(2) < -0.85):
-                        dirArr[1] = 'l'
-                    elif(self.axis_data.get(2) > 0.85):
-                        dirArr[1] = 'r'
-                    elif(self.axis_data.get(3) < -0.85):
-                        dirArr[1] = 'u'
-                    elif(self.axis_data.get(3) > 0.85):
-                        dirArr[1] = 'd'
+                    if(self.axis_data.get(1) < -self.activation):
+                        joystick_vels[1] = ((self.axis_data[1] + self.activation) / (1 -self.activation)) *self.maxvel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(1) >self.activation):
+                        joystick_vels[1] = ((self.axis_data[1] - self.activation) / (1 -self.activation)) *self.maxvel 
                     else:
-                        dirArr[1] = 'n'
+                        joystick_vels[1] = 0
 
-                    print(dirArr)
+                    if(self.axis_data.get(3) < -self.activation):
+                        joystick_vels[2] = ((self.axis_data[3] + self.activation) / (1 -self.activation)) *self.maxvel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(3) >self.activation):
+                        joystick_vels[2] = ((self.axis_data[3] - self.activation) / (1 -self.activation)) *self.maxvel 
+                    else:
+                        joystick_vels[2] = 0
 
-                    
-                    data = bytes(range(0, 0x88, 0x11))
+                    if(self.axis_data.get(4) < -self.activation):
+                        joystick_vels[3] = ((self.axis_data[4] + self.activation) / (1 -self.activation)) *self.maxvel  # normalizes the 0.25 to 1 range to a 0 - 1 range and then mult by max vel
+                    elif(self.axis_data.get(4) >self.activation):
+                        joystick_vels[3] = ((self.axis_data[4] - self.activation) / (1 -self.activation)) *self.maxvel 
+                    else:
+                        joystick_vels[3] = 0
 
+                    print(self.axis_data[0])
+                    print(joystick_vels)
+
+                    self.data = bytearray(b'\xA2\x00\x00\x00')
+                    self.data += int(joystick_vels[0]).to_bytes(4, byteorder='big', signed=True)
+                    self.data = bytes(self.data)
                     frame1 = CanFrame(can_id = self.can_id, data = self.data)
-
                     self.s.send(frame1)
                 
                 else:
