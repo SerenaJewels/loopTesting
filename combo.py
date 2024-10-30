@@ -1,38 +1,30 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# This file presents an interface for interacting with the Playstation 4 Controller
-# in Python. Simply plug your PS4 controller into your computer using USB and run this
-# script!
-#
-# NOTE: I assume in this script that the only joystick plugged in is the PS4 controller.
-#       if this is not the case, you will need to change the class accordingly.
-#
-# Copyright © 2015 Clay L. McLeod <clay.l.mcleod@gmail.com>
-#
-# Distributed under terms of the MIT license.
-#
-# https://gist.github.com/claymcleod/028386b860b75e4f5472
-
-import os
+from socketcan import CanRawSocket, CanFrame
 import pprint
 import pygame
 
-class PS4Controller(object):
+class PS4ToBus(object):
     """Class representing the PS4 controller. Pretty straightforward functionality."""
 
     controller = None
     axis_data = None
     button_data = None
     hat_data = None
+    interface = None
+    can_id = None
+    s = None
+    data = None
 
-    def init(self):
+    def init(self, bus):
         """Initialize the joystick components"""
-        
         pygame.init()
         pygame.joystick.init()
         self.controller = pygame.joystick.Joystick(0)
         self.controller.init()
+
+        """Initialize socket"""
+        interface = bus
+        can_id = 0x141
+        s = CanRawSocket(interface = interface)
 
     def listen(self):
         """Listen for events to happen"""
@@ -95,11 +87,17 @@ class PS4Controller(object):
 
                     print(dirArr)
 
+                    
+                    data = bytes(range(0, 0x88, 0x11))
+
+                    frame1 = CanFrame(can_id = self.can_id, data = self.data)
+
+                    self.s.send(frame1)
                 
                 else:
                     print('calibrate:', pprint.pprint(self.axis_data))
 
 if __name__ == "__main__":
-    ps4 = PS4Controller()
-    ps4.init()
+    ps4 = PS4ToBus()
+    ps4.init("vcan0")
     ps4.listen()
